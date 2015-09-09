@@ -5,7 +5,6 @@ var router = express.Router();
 var paperwork = require('paperwork');
 var _ = require('lodash');
 
-var HttpError = require('../errors');
 var Station = require('../model/station');
 
 var schema = {
@@ -13,20 +12,27 @@ var schema = {
   location: {
     lat: Number,
     long: Number
-  }
-  //availableBikes: [String]
+  },
+  availableBikes: [String]
 };
+
+var locationify = (id) => '/station/' + id;
 
 router.get('/:stationId', (req, res, next) =>
   Station.get(req.params.stationId)
-    .then(station => res.send(station))
+    .then(station => {
+      res.append('Location', locationify(station.id));
+      res.send(station.strip());
+    })
     .catch(next)
 );
 
 router.put('/:stationId', paperwork.accept(schema), (req, res, next) =>
-  new Station(_.extend({}, req.body, {id: req.params.stationId}))
-    .save()
-    .then(response => res.send(response))
+  Station.save(_.extend({}, req.body, {id: req.params.stationId}))
+    .then(station => {
+      res.append('Location', locationify(station.id));
+      res.send(station.strip());
+    })
     .catch(next)
 );
 
@@ -35,15 +41,12 @@ router.post('/:stationId/bike', paperwork.accept(schema), (req, res, next) => {}
 router.post('/:stationId/bike/:bikeId', paperwork.accept(schema), (req, res, next) => {});
 
 router.delete('/all', (req, res, next) => {
+  require('../couchdb')
+    .doIt()
+    .then(() => res.sendStatus(200))
+    .catch(next);
 });
 
 router.get('/near/:lat/:long', (req, res, next) => {});
-
-function halify(item) {
-  var self = '/station/' + item.id;
-  return _.extend(item, {
-    hireUrl: "/station/" + item.id + "/bike"
-  });
-}
 
 module.exports = router;

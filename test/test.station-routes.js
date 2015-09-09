@@ -18,13 +18,16 @@ describe('API:', function() {
         .set('Content-Type', 'application/json')
         .send({
           name: 'London',
-          location: {
-            lat: 51.5286416,
-            long: -0.1015987
-          }
+          location: { lat: 51.5286416, long: -0.1015987 },
+          availableBikes: ["001","002","003","004"]
         })
         .expect('Content-Type', /json/)
-        .expect(200, done);
+        .expect(200, {
+          name: 'London',
+          location: { lat: 51.5286416, long: -0.1015987 },
+          availableBikes: ["001","002","003","004"]
+        })
+        .expect('Location', '/station/12345', done)
     });
   });
 
@@ -34,20 +37,12 @@ describe('API:', function() {
         .get('/station/12345')
         .set('Content-Type', 'application/json')
         .expect('Content-Type', /json/)
-        .expect(res => {
-          res.body._id = '2e386b317213122389b150c39d00cab8';
-          res.body._rev = '1-358819abb240d616502ced3b3ae36147';
-        })
         .expect(200, {
-          _id: '2e386b317213122389b150c39d00cab8',
-          _rev: '1-358819abb240d616502ced3b3ae36147',
-          id: '12345',
           name: 'London',
-          location: {
-            lat: 51.5286416,
-            long: -0.1015987
-          }
-        }, done);
+          location: { lat: 51.5286416, long: -0.1015987 },
+          availableBikes: ["001","002","003","004"]
+        })
+        .expect('Location', '/station/12345', done)
     });
 
     it('should return a 404 for a missing station', function(done) {
