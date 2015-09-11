@@ -2,62 +2,60 @@
 
 var geohash = require('../geohash');
 var couchdb = require('../configuration').couchdb;
-var HttpError = require('../errors');
+var Errors = require('../errors');
 
+var unirest = require('unirest');
 var Promise = require('bluebird');
-var request = Promise.promisifyAll(require('request'));
 var qs = require('querystring');
 var _ = require('lodash');
+var _s = require('sprintf');
 
 class Station {
   constructor(context) {
     _.extend(this, context);
-    this.id = this.id || -1;
-    this.location = this.location || {lat: 0, long: 0};
-    this.name = this.name || 'Unknown';
   }
 
   static get(id) {
-    return request
-      .getAsync(couchdb.stations + '/' + couchdb.views.byId + '?' + qs.stringify({key: '"' + id + '"', include_docs: true}))
-      .spread((response, body) => {
-        if (response.statusCode !== 200)
-          throw new HttpError();
-        let document = JSON.parse(body);
-        if (!_.get(document, 'rows[0].doc'))
-          throw new HttpError(404, 'Not Found');
-        return new Station(document.rows[0].doc);
-      });
+    return new Promise((resolve, reject) => {
+      let url = _s('%s/%s?%s', couchdb.stations, couchdb.views.byId, qs.stringify({key: '"' + id + '"', include_docs: true}));
+      unirest.get(url)
+        .headers({Accept: 'application/json'})
+        .end(response => {
+          if (response.status !== 200)
+            return reject(new Errors.HttpError(response.status, body.reason));
+          if (_.isEmpty(response.body.rows))
+            return reject(new Errors.NotFound());
+          resolve(new Station(_.first(response.body.rows).doc));
+        });
+    });
   };
 
-  static save(body) {
-    return request
-      .postAsync({
-        url: couchdb.stations,
-        json: true,
-        body: body
-      })
-      .spread((response, body) => Station.getFor(body.id));
+  static save(station) {
+    return new Promise((resolve, reject) => {
+      unirest.post(couchdb.stations)
+        .type('json')
+        .send(station)
+        .end(response => {
+          if (response.status !== 201)
+            return reject(new Errors.HttpError(response.status, body.reason));
+          resolve(Station.getFor(response.body.id));
+        });
+    });
   };
 
-  static getFor(_id) {
-    return request
-      .getAsync(couchdb.stations + '/' + _id)
-      .spread((response, body) => {
-        if (response.statusCode !== 200)
-          throw new HttpError(response.statusCode);
-        return new Station(JSON.parse(body));
+  static getFor(couchId) {
+    return new Promise((resolve, reject) => {
+      unirest.get(_s('%s/%s', couchdb.stations, couchId))
+      .headers({Accept: 'application/json'})
+      .end(response => {
+        if (response.status !== 200)
+          return reject(new Errors.HttpError(response.status, body.reason));
+        resolve(new Station(response.body));
       });
+    });
   };
 
   update() {
-    return request
-      .putAsync({
-        url: couchdb.stations + '/' + this._id,
-        json: true,
-        body: this
-      })
-      .spread((response, body) => new Station(JSON.parse(body)));
   }
 
   get geohash() {

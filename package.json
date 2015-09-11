@@ -9,7 +9,7 @@
     "test": "mocha"
   },
   "author": "Kevin Denver <kevin.denver@gmail.com>",
-  "license": "Apache 2",
+  "license": "Apache-2.0",
   "engines": {
     "node": ">=4.0.0"
   },
@@ -23,7 +23,8 @@
     "lodash": "3.10.1",
     "morgan": "1.6.1",
     "paperwork": "2.1.1",
-    "request": "2.61.0"
+    "sprintf": "^0.1.5",
+    "unirest": "^0.4.2"
   },
   "devDependencies": {
     "forever": "^0.15.1",

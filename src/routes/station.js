@@ -6,6 +6,7 @@ var paperwork = require('paperwork');
 var _ = require('lodash');
 
 var Station = require('../model/station');
+var Errors = require('../errors');
 
 var schema = {
   name: String,
@@ -24,7 +25,7 @@ router.get('/:stationId', (req, res, next) =>
       res.append('Location', locationify(station.id));
       res.send(station.strip());
     })
-    .catch(next)
+    .error(next)
 );
 
 router.put('/:stationId', paperwork.accept(schema), (req, res, next) =>

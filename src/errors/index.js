@@ -1,11 +1,29 @@
 'use strict';
 
-class HttpError extends Error {
-  constructor(status, message) {
+class InternalServerError extends Error {
+  constructor(message, status) {
     super();
-    this.message = message;
-    this.status = status;
+    this.status = status || 500;
+    this.message = message || 'Internal Server Error';
   }
 }
 
-module.exports = HttpError;
+class NotFound extends Error {
+  constructor(message, status) {
+    super();
+    this.status = status || 404;
+    this.message = message || 'Not Found';
+  }
+}
+
+class HttpError extends Error {
+  constructor(message, status) {
+    super();
+    this.status = status || 500;
+    this.message = message;
+  }
+}
+
+exports.InternalServerError = InternalServerError;
+exports.NotFound = NotFound;
+exports.HttpError = HttpError;
