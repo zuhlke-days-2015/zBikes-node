@@ -17,42 +17,37 @@ var schema = {
   availableBikes: [String]
 };
 
-var locationify = (id) => '/station/' + id;
+router.get('/:stationId', (req, res, next) => {
+  function ok(station) {
+    res.append('Location', '/station/' + station.id);
+    res.send(station.strip());
+  }
 
-router.get('/:stationId', (req, res, next) =>
   Station.get(req.params.stationId)
-    .then(station => {
-      res.append('Location', locationify(station.id));
-      res.send(station.strip());
-    })
+    .then(station => ok(station), notFound => res.status(404).send({status: 'not found'}))
     .error(next)
-);
+});
 
-router.put('/:stationId', paperwork.accept(schema), (req, res, next) =>
+router.put('/:stationId', paperwork.accept(schema), (req, res, next) => {
+  function ok(station) {
+    res.append('Location', '/station/' + station.id);
+    res.send(station.strip());
+  }
+
+  // TODO: this is ugly!
   Station.get(req.params.stationId)
-    .then(existing => Station.update(_.merge(existing, req.body)))
-    .then(updated => {
-      res.append('Location', locationify(updated.id));
-      res.send(updated.strip());
-    })
-    .catch(Errors.NotFound, err => {
-      Station.save(_.extend({}, req.body, {id: req.params.stationId}))
-        .then(saved => {
-          res.append('Location', locationify(saved.id));
-          res.send(saved.strip());
-        })
-    })
+    .then(existing => Station.update(_.merge(existing, req.body)), notFound => Station.save(_.extend({}, req.body, {id: req.params.stationId})))
+    .then(updated => ok(updated))
     .error(next)
-);
+});
 
 router.post('/:stationId/bike', paperwork.accept(schema), (req, res, next) => {});
 
 router.post('/:stationId/bike/:bikeId', paperwork.accept(schema), (req, res, next) => {});
 
 router.delete('/all', (req, res, next) => {
-  require('../couchdb')
-    .doIt()
-    .then(() => res.sendStatus(200))
+  require('../couchdb').doIt()
+    .then(() => res.status(200).send({status: 'ok'}))
     .error(next);
 });
 

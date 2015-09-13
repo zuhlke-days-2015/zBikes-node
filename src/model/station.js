@@ -28,7 +28,7 @@ class Station {
           if (response.status !== 200)
             return reject(new Errors.HttpError(response.status, response.body.reason));
           if (_.isEmpty(response.body.rows))
-            return reject(new Errors.NotFound());
+            return reject(id);
           resolve(new Station(_.first(response.body.rows).doc));
         });
     });
