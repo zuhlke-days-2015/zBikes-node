@@ -24,13 +24,13 @@ describe('geohash', function() {
   });
 
   it('should encode the station long and lat coordinates', function() {
-    let station = new Station({
+    let station = Station.create({
       name: 'London',
       location: {
         lat: 51.5286416,
         long: -0.1015987
       }
     });
-    should(station.geohash).equal('gcpvjsw00e48');
+    should(station.get('geohash')).equal('gcpvjsw00e48');
   });
 });

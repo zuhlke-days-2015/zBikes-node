@@ -1,79 +1,83 @@
 'use strict';
 
-var geohash = require('../geohash');
-var couchdb = require('../configuration').couchdb;
-var Errors = require('../errors');
+let unirest = require('unirest'),
+    Promise = require('bluebird'),
+    qs = require('querystring'),
+    _ = require('lodash'),
+    sprintf = require('sprintf'),
+    Immutable = require('immutable');
 
-var unirest = require('unirest');
-var Promise = require('bluebird');
-var qs = require('querystring');
-var _ = require('lodash');
-var _s = require('sprintf');
+let geohash = require('../geohash'),
+    couchdb = require('../configuration').couchdb,
+    HttpError = require('../errors').HttpError,
+    NotFound = require('../errors').NotFound;
 
 class Station {
-  constructor(context) {
-    _.extend(this, context);
-    Object.defineProperty(this, 'geohash', {
-      get: () => geohash.encode(this.location.lat, this.location.long),
-      enumerable: true
-    });
+
+  static create(data, id) {
+    let station = Immutable.fromJS(data);
+    if (id)
+      station = station.set('id', id);
+    if (!station.has('geohash'))
+      station = station.set('geohash', geohash.encode(data.location.lat, data.location.long));
+    return station;
   }
 
   static get(id) {
     return new Promise((resolve, reject) => {
-      let url = _s('%s/%s?%s', couchdb.stations, couchdb.views.byId, qs.stringify({key: '"' + id + '"', include_docs: true}));
+      let url = sprintf('%s/%s?%s', couchdb.stations, couchdb.views.byId, qs.stringify({key: '"' + id + '"', include_docs: true}));
       unirest.get(url)
         .headers({Accept: 'application/json'})
         .end(response => {
           if (response.status !== 200)
-            return reject(new Errors.HttpError(response.status, response.body.reason));
+            return reject(new HttpError(response.status, response.body.reason));
           if (_.isEmpty(response.body.rows))
-            return reject(id);
-          resolve(new Station(_.first(response.body.rows).doc));
-        });
-    });
-  };
-
-  static save(station) {
-    return new Promise((resolve, reject) => {
-      unirest.post(couchdb.stations)
-        .type('json')
-        .send(station)
-        .end(response => {
-          if (response.status !== 201)
-            return reject(new Errors.HttpError(response.status, response.body.reason));
-          resolve(Station.getFor(response.body.id));
+            return reject(new NotFound());
+          resolve(Station.create(_.first(response.body.rows).doc));
         });
     });
   };
 
   static getFor(couchId) {
     return new Promise((resolve, reject) => {
-      unirest.get(_s('%s/%s', couchdb.stations, couchId))
-      .headers({Accept: 'application/json'})
-      .end(response => {
-        if (response.status !== 200)
-          return reject(new Errors.HttpError(response.status, response.body.reason));
-        resolve(new Station(response.body));
-      });
+      unirest.get(sprintf('%s/%s', couchdb.stations, couchId))
+        .headers({Accept: 'application/json'})
+        .end(response => {
+          if (response.status !== 200)
+            return reject(new HttpError(response.status, response.body.reason));
+          resolve(Station.create(response.body));
+        });
     });
   };
 
-  static update(updates) {
+  static save(data, id) {
     return new Promise((resolve, reject) => {
-      unirest.put(_s('%s/%s', couchdb.stations, updates._id))
-      .type('json')
-      .send(updates)
-      .end(response => {
-        if (response.status !== 201)
-          return reject(new Errors.HttpError(response.status, response.body.reason));
+      unirest.post(couchdb.stations)
+        .type('json')
+        .send(Station.create(data, id))
+        .end(response => {
+          if (response.status !== 201)
+            return reject(new HttpError(response.status, response.body.reason));
           resolve(Station.getFor(response.body.id));
         });
-      });
+    });
+  };
+
+  static update(existing, updates) {
+    return new Promise((resolve, reject) => {
+      unirest.put(sprintf('%s/%s', couchdb.stations, existing.get('_id')))
+        .type('json')
+        .send(existing.merge(updates))
+        .end(response => {
+          if (response.status !== 201)
+            return reject(new HttpError(response.status, response.body.reason));
+          resolve(Station.getFor(response.body.id));
+        });
+    });
   }
 
-  strip() {
-    return _.omit(this, ['_id', '_rev', 'id']);
+  static strip(station) {
+    return station.delete('_id').delete('_rev').delete('id');
   }
 }
 

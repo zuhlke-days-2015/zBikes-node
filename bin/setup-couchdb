@@ -2,4 +2,4 @@
 
 'use strict';
 
-require('../src/couchdb').doIt();
+require('../src/couchdb').deleteAll();

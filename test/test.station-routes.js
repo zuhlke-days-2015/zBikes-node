@@ -7,8 +7,9 @@ describe('API:', function() {
 
   var app;
 
-  beforeEach(function() {
+  beforeEach(function(done) {
     app = require('../src/app.js');
+    request(app).delete('/station/all').expect(200, done);
   });
 
   describe('PUT /station/:stationId', function() {
@@ -30,7 +31,9 @@ describe('API:', function() {
         })
         .expect('Location', '/station/12345', done)
     });
+
     it('should update a new station', function(done) {
+      // todo: wait for first request to succeed
       request(app)
         .put('/station/123456')
         .set('Content-Type', 'application/json')

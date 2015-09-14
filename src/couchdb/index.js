@@ -42,7 +42,7 @@ let deleteStations = () => {
  }
 
 module.exports = {
-  doIt: function() {
+  deleteAll: function() {
     return deleteStations()
       .then(createStations)
       .then(createStationsByIdView)
