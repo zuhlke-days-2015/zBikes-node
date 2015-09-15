@@ -31,15 +31,30 @@ let deleteStations = () => {
 /**
  * Creates a view for searching stations by id.
  */
- let createStationsByIdView = () => {
-   return new Promise((resolve, reject) => {
-     unirest.put(couchdb.stations + '/_design/stations')
+let createStationsByIdView = () => {
+  return new Promise((resolve, reject) => {
+    unirest.put(couchdb.stations + '/_design/stations')
       .headers({Accept: 'application/json'})
       .type('json')
-      .send({"_id":"_design/stations","language":"javascript","views":{"by_id":{"map":"function(doc) {\n  if (doc.id) emit(doc.id, null);\n}"}}})
+      .send({
+        _id: '_design/stations',
+        language: 'javascript',
+        views: {
+          by_geohash: {
+            map: "function(doc) {if (doc.geohash) emit(doc.geohash, null); }"
+          },
+          by_geohash_exact: {
+            map: "function(doc) { if (doc.geohash) { for (var i=5; i < 9; i++) { var geohash = doc.geohash.substr(0,i); emit(geohash, null); }}}",
+            reduce: '_count'
+          },
+          by_id: {
+            map: "function(doc) { if (doc.id) emit(doc.id, null); }"
+          }
+        }
+      })
       .end(response => response.statusCode === 201 ? resolve() : reject(response.body))
-   });
- }
+  });
+}
 
 module.exports = {
   deleteAll: function() {

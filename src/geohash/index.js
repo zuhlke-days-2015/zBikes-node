@@ -143,3 +143,4 @@ function encodeGeoHash(latitude, longitude) {
 
 exports.encode = encodeGeoHash;
 exports.decode = decodeGeoHash;
+exports.calculateAdjacent = calculateAdjacent;

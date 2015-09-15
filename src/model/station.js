@@ -7,7 +7,7 @@ let unirest = require('unirest'),
     sprintf = require('sprintf'),
     Immutable = require('immutable');
 
-let geohash = require('../geohash'),
+let GeoHash = require('../geohash'),
     couchdb = require('../configuration').couchdb,
     HttpError = require('../errors').HttpError,
     NotFound = require('../errors').NotFound;
@@ -19,7 +19,7 @@ class Station {
     if (id)
       station = station.set('id', id);
     if (!station.has('geohash'))
-      station = station.set('geohash', geohash.encode(data.location.lat, data.location.long));
+      station = station.set('geohash', GeoHash.encode(data.location.lat, data.location.long));
     return station;
   }
 
@@ -74,6 +74,47 @@ class Station {
           resolve(Station.getFor(response.body.id));
         });
     });
+  }
+
+  static findClosest(lat, long, resolution) {
+    let geohash = GeoHash.encode(lat, long);
+    if (resolution) geohash = geohash.substr(0, resolution);
+
+    let neighbours = {};
+    neighbours.center = geohash;
+    neighbours.top = GeoHash.calculateAdjacent(geohash, 'top');
+    neighbours.bottom = GeoHash.calculateAdjacent(geohash, 'bottom');
+    neighbours.right = GeoHash.calculateAdjacent(geohash, 'right');
+    neighbours.left = GeoHash.calculateAdjacent(geohash, 'left');
+    neighbours.topleft = GeoHash.calculateAdjacent(neighbours.left, 'top');
+    neighbours.topright = GeoHash.calculateAdjacent(neighbours.right, 'top');
+    neighbours.bottomright = GeoHash.calculateAdjacent(neighbours.right, 'bottom');
+    neighbours.bottomleft = GeoHash.calculateAdjacent(neighbours.left, 'bottom');
+
+    let url = sprintf('%s/%s', couchdb.stations, couchdb.views.byExactGeoHash);
+    let requests = [];
+
+    _.each(neighbours, (localhash, spot) => {
+      requests.push(new Promise((resolve, reject) => {
+        unirest.post(url).headers({Accept: 'application/json'})
+          .type('json')
+          .send({
+            startkey: [localhash, {}],
+            endkey : [localhash],
+            descending : true,
+            reduce : false,
+            limit : 10,
+            include_docs : true
+          })
+          .end(response => {
+            if (response.status !== 200)
+              return reject(new HttpError(response.status, response.body.reason));
+            resolve(response.body.rows);
+          });
+        }));
+    });
+
+    return Promise.all(requests);
   }
 
   static strip(station) {
