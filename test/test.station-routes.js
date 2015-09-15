@@ -1,7 +1,10 @@
+'use strict';
+
 process.env.NODE_ENV = 'test';
 
 var should = require('should');
 var request = require('supertest');
+var async = require('async');
 
 describe('API:', function() {
 
@@ -33,39 +36,56 @@ describe('API:', function() {
     });
 
     it('should update a new station', function(done) {
-      // todo: wait for first request to succeed
-      request(app)
-        .put('/station/123456')
-        .set('Content-Type', 'application/json')
-        .send({
-          name: 'London',
-          location: { lat: 51.5286416, long: -0.1015987 },
-          availableBikes: ["001","002","003","004"]
-        }).end();
+      let agent = request(app);
 
-      request(app)
-        .put('/station/123456')
-        .set('Content-Type', 'application/json')
-        .send({
-          name: 'London (N4)',
-          location: { lat: 51.5286416, long: -0.1015987 },
-          availableBikes: ["001","002","003","004"]
-        })
-        .expect('Content-Type', /json/)
-        .expect(200, {
-          name: 'London (N4)',
-          geohash: 'gcpvjsw00e48',
-          location: { lat: 51.5286416, long: -0.1015987 },
-          availableBikes: ["001","002","003","004"]
-        })
-        .expect('Location', '/station/123456', done)
+      let createItem = (cb) => {
+        agent.put('/station/123456')
+          .set('Content-Type', 'application/json')
+          .send({
+            name: 'London',
+            location: { lat: 51.5286416, long: -0.1015987 },
+            availableBikes: ["001","002","003","004"]
+          })
+          .expect(200, cb);
+      }
+
+      let updateItem = (cb) => {
+        agent.put('/station/123456')
+          .set('Content-Type', 'application/json')
+          .send({
+            name: 'London (N4)',
+            location: { lat: 51.5286416, long: -0.1015987 },
+            availableBikes: ["001","002","003","004"]
+          })
+          .expect('Content-Type', /json/)
+          .expect(200, {
+            name: 'London (N4)',
+            geohash: 'gcpvjsw00e48',
+            location: { lat: 51.5286416, long: -0.1015987 },
+            availableBikes: ["001","002","003","004"]
+          })
+          .expect('Location', '/station/123456', cb)
+      }
+
+      async.series([createItem, updateItem], done);
     });
   });
 
   describe('GET /station/:stationId', function() {
+    beforeEach(function(done) {
+      request(app).put('/station/1234567')
+        .set('Content-Type', 'application/json')
+        .send({
+          name: 'London',
+          location: { lat: 51.5286416, long: -0.1015987 },
+          availableBikes: ["001","002","003","004"]
+        })
+        .expect(200, done);
+    });
+
     it('should return a 200 for an existing station', function(done) {
       request(app)
-        .get('/station/12345')
+        .get('/station/1234567')
         .set('Content-Type', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200, {
@@ -74,7 +94,7 @@ describe('API:', function() {
           location: { lat: 51.5286416, long: -0.1015987 },
           availableBikes: ["001","002","003","004"]
         })
-        .expect('Location', '/station/12345', done)
+        .expect('Location', '/station/1234567', done)
     });
 
     it('should return a 404 for a missing station', function(done) {
