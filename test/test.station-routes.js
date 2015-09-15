@@ -106,4 +106,30 @@ describe('API:', function() {
     });
   });
 
+  describe('GET /station/near/:lat/:long', function() {
+    beforeEach(function(done) {
+      request(app).put('/station/1234567')
+        .set('Content-Type', 'application/json')
+        .send({
+          name: 'London',
+          location: { lat: 51.5286416, long: -0.1015987 },
+          availableBikes: ["001","002","003","004"]
+        })
+        .expect(200, done);
+    });
+
+    it('should find stations near London', function(done) {
+      request(app)
+        .get('/station/near/51.5286416/-0.1015987')
+        .set('Content-Type', 'application/json')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function(err, res) {
+          if (err) done(err);
+          should(res.body.items[0].geohash).equal('gcpvjsw00e48');
+          done();
+        });
+    });
+  });
+
 });

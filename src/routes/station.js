@@ -51,6 +51,9 @@ router.delete('/all', (req, res, next) => {
     .error(next);
 });
 
-router.get('/near/:lat/:long', (req, res, next) => {});
+router.get('/near/:lat/:long', (req, res, next) => {
+    Station.findClosest(req.params.lat, req.params.long, 8)
+      .then(results => res.send({items: results}));
+});
 
 module.exports = router;

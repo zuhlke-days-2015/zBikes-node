@@ -2,7 +2,6 @@
 
 let unirest = require('unirest'),
     Promise = require('bluebird'),
-    qs = require('querystring'),
     _ = require('lodash'),
     sprintf = require('sprintf'),
     Immutable = require('immutable');
@@ -25,9 +24,9 @@ class Station {
 
   static get(id) {
     return new Promise((resolve, reject) => {
-      let url = sprintf('%s/%s?%s', couchdb.stations, couchdb.views.byId, qs.stringify({key: '"' + id + '"', include_docs: true}));
-      unirest.get(url)
-        .headers({Accept: 'application/json'})
+      unirest.get(sprintf('%s/%s', couchdb.stations, couchdb.views.byId))
+        .query({key: '"' + id + '"', include_docs: true})
+        .headers({'Accept': 'application/json'})
         .end(response => {
           if (response.status !== 200)
             return reject(new HttpError(response.status, response.body.reason));
@@ -41,7 +40,7 @@ class Station {
   static getFor(couchId) {
     return new Promise((resolve, reject) => {
       unirest.get(sprintf('%s/%s', couchdb.stations, couchId))
-        .headers({Accept: 'application/json'})
+        .headers({'Accept': 'application/json'})
         .end(response => {
           if (response.status !== 200)
             return reject(new HttpError(response.status, response.body.reason));
@@ -96,16 +95,14 @@ class Station {
 
     _.each(neighbours, (localhash, spot) => {
       requests.push(new Promise((resolve, reject) => {
-        unirest.post(url).headers({Accept: 'application/json'})
-          .type('json')
-          .send({
-            startkey: [localhash, {}],
-            endkey : [localhash],
-            descending : true,
-            reduce : false,
-            limit : 10,
-            include_docs : true
+        unirest.get(url)
+          .query({
+            key: '"' + localhash + '"',
+            include_docs: true,
+            descending: true,
+            reduce: false
           })
+          .headers({'Accept': 'application/json', 'Content-Type': 'application/json'})
           .end(response => {
             if (response.status !== 200)
               return reject(new HttpError(response.status, response.body.reason));
@@ -114,7 +111,11 @@ class Station {
         }));
     });
 
-    return Promise.all(requests);
+    return Promise.all(requests)
+      .then(results => Immutable.fromJS(results)
+        .flatten(true)
+        .map(item => item.get('doc'))
+        .toSet())
   }
 
   static strip(station) {
