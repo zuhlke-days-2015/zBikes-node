@@ -52,7 +52,7 @@ router.delete('/all', (req, res, next) => {
 });
 
 router.get('/near/:lat/:long', (req, res, next) => {
-    Station.findClosest(req.params.lat, req.params.long, 8)
+    Station.findClosest(req.params.lat, req.params.long, req.query.resolution || 8)
       .then(results => res.send({items: results}));
 });
 

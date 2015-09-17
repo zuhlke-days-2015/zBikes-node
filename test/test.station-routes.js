@@ -5,6 +5,7 @@ process.env.NODE_ENV = 'test';
 var should = require('should');
 var request = require('supertest');
 var async = require('async');
+var _ = require('lodash');
 
 describe('API:', function() {
 
@@ -120,13 +121,13 @@ describe('API:', function() {
 
     it('should find stations near London', function(done) {
       request(app)
-        .get('/station/near/51.5286416/-0.1015987')
+        .get('/station/near/51.5286416/-0.1015987?resolution=8')
         .set('Content-Type', 'application/json')
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function(err, res) {
           if (err) done(err);
-          should(res.body.items[0].geohash).equal('gcpvjsw00e48');
+          should(_.get(res, 'body.items[0].geohash')).equal('gcpvjsw00e48');
           done();
         });
     });

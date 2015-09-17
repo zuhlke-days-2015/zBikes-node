@@ -25,7 +25,6 @@
     "morgan": "1.6.1",
     "optional-js": "1.0.1",
     "paperwork": "2.1.1",
-    "sprintf": "0.1.5",
     "unirest": "0.4.2"
   },
   "devDependencies": {

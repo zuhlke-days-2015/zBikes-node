@@ -3,7 +3,6 @@
 let unirest = require('unirest'),
     Promise = require('bluebird'),
     _ = require('lodash'),
-    sprintf = require('sprintf'),
     Immutable = require('immutable');
 
 let GeoHash = require('../geohash'),
@@ -24,8 +23,11 @@ class Station {
 
   static get(id) {
     return new Promise((resolve, reject) => {
-      unirest.get(sprintf('%s/%s', couchdb.stations, couchdb.views.byId))
-        .query({key: '"' + id + '"', include_docs: true})
+      unirest.get(`${couchdb.stations}/${couchdb.views.byId}`)
+        .query({
+          key: `"${id}"`,
+          include_docs: true
+        })
         .headers({'Accept': 'application/json'})
         .end(response => {
           if (response.status !== 200)
@@ -39,7 +41,7 @@ class Station {
 
   static getFor(couchId) {
     return new Promise((resolve, reject) => {
-      unirest.get(sprintf('%s/%s', couchdb.stations, couchId))
+      unirest.get(`${couchdb.stations}/${couchId}`)
         .headers({'Accept': 'application/json'})
         .end(response => {
           if (response.status !== 200)
@@ -64,7 +66,7 @@ class Station {
 
   static update(existing, updates) {
     return new Promise((resolve, reject) => {
-      unirest.put(sprintf('%s/%s', couchdb.stations, existing.get('_id')))
+      unirest.put(`${couchdb.stations}/${existing.get('_id')}`)
         .type('json')
         .send(existing.merge(updates))
         .end(response => {
@@ -90,14 +92,14 @@ class Station {
     neighbours.bottomright = GeoHash.calculateAdjacent(neighbours.right, 'bottom');
     neighbours.bottomleft = GeoHash.calculateAdjacent(neighbours.left, 'bottom');
 
-    let url = sprintf('%s/%s', couchdb.stations, couchdb.views.byExactGeoHash);
+    let url = `${couchdb.stations}/${couchdb.views.byExactGeoHash}`;
     let requests = [];
 
     _.each(neighbours, (localhash, spot) => {
       requests.push(new Promise((resolve, reject) => {
         unirest.get(url)
           .query({
-            key: '"' + localhash + '"',
+            key: `"${localhash}"`,
             include_docs: true,
             descending: true,
             reduce: false
