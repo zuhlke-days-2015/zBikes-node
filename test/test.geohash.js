@@ -1,15 +1,15 @@
 'use strict';
 
-var Station = require('../src/model/station');
-var geohash = require('../src/geohash');
-var should = require('should');
+let Station = require('../src/model/station');
+let geohash = require('../src/geohash');
+let should = require('should');
 
-describe('geohash', function() {
-  it('should encode long and lat coordinates', function() {
+describe('geohash', () => {
+  it('should encode long and lat coordinates', () => {
     should(geohash.encode(51.5286416, -0.1015987)).equal('gcpvjsw00e48');
   });
 
-  it('should decode long and lat coordinates', function() {
+  it('should decode long and lat coordinates', () => {
     let coordinates = geohash.decode('gcpvjsw00e48');
 
     should(coordinates.latitude)
@@ -23,7 +23,7 @@ describe('geohash', function() {
       .and.containEql(-0.10159855708479881);
   });
 
-  it('should encode the station long and lat coordinates', function() {
+  it('should encode the station long and lat coordinates', () => {
     let station = Station.create({
       name: 'London',
       location: {

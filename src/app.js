@@ -1,13 +1,13 @@
 'use strict';
 
-var express = require('express');
-var logger = require('morgan');
-var bodyParser = require('body-parser');
+let express = require('express');
+let logger = require('morgan');
+let bodyParser = require('body-parser');
 
 // routes
-var station = require('./routes/station');
+let station = require('./routes/station');
 
-var app = express();
+let app = express();
 
 app.disable('x-powered-by');
 

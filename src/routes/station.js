@@ -1,14 +1,14 @@
 'use strict';
 
-var express = require('express');
-var router = express.Router();
-var paperwork = require('paperwork');
-var _ = require('lodash');
+let express = require('express');
+let router = express.Router();
+let paperwork = require('paperwork');
+let _ = require('lodash');
 
-var Station = require('../model/station');
-var NotFound = require('../errors').NotFound;
+let Station = require('../model/station');
+let NotFound = require('../errors').NotFound;
 
-var schema = {
+let schema = {
   name: String,
   location: {
     lat: Number,
@@ -17,7 +17,7 @@ var schema = {
   availableBikes: [String]
 };
 
-var strip = station => station.strip();
+let strip = station => station.strip();
 
 router.get('/:stationId', (req, res, next) => {
   Station.get(req.params.stationId)

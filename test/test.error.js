@@ -2,14 +2,14 @@ var Errors = require('../src/errors');
 var should = require('should');
 var Promise = require('bluebird');
 
-describe('Errors', function() {
+describe('Errors', () => {
 
-  describe('NotFound', function() {
-    it('should be of type Error', function() {
+  describe('NotFound', () => {
+    it('should be of type Error', () => {
       should(Errors.NotFound.prototype).instanceof(Error);
     });
 
-    it('should be caught with bluebird', function(done) {
+    it('should be caught with bluebird', done => {
       Promise.resolve()
         .then(() => { throw new Errors.NotFound(); })
         .then(() => done('I should have not been called'))
@@ -20,12 +20,12 @@ describe('Errors', function() {
     });
   });
 
-  describe('InternalServerError', function() {
-    it('should be of type Error', function() {
+  describe('InternalServerError', () => {
+    it('should be of type Error', () => {
       should(Errors.InternalServerError.prototype).instanceof(Error);
     });
 
-    it('should be caught with bluebird', function(done) {
+    it('should be caught with bluebird', done => {
       Promise.resolve()
         .then(() => { throw new Errors.InternalServerError(); })
         .then(() => done('I should have not been called'))
@@ -36,8 +36,8 @@ describe('Errors', function() {
     });
   });
 
-  describe('API', function() {
-    it('should handle two exceptions', function(done) {
+  describe('API', () => {
+    it('should handle two exceptions', done => {
       Promise.resolve()
         .then(() => { throw new Errors.InternalServerError(); })
         .then(() => done('I should have not been called'))

@@ -1,7 +1,7 @@
 'use strict';
 
 let couchdb = require('../configuration').couchdb;
-var unirest = require('unirest');
+let unirest = require('unirest');
 let Promise = require('bluebird');
 let _ = require('lodash');
 

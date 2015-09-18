@@ -2,22 +2,22 @@
 
 process.env.NODE_ENV = 'test';
 
-var should = require('should');
-var request = require('supertest');
-var async = require('async');
-var _ = require('lodash');
+let should = require('should');
+let request = require('supertest');
+let async = require('async');
+let _ = require('lodash');
 
-describe('API:', function() {
+describe('API:', () => {
 
-  var app;
+  let app;
 
-  beforeEach(function(done) {
+  beforeEach(done => {
     app = require('../src/app.js');
     request(app).delete('/station/all').expect(200, done);
   });
 
-  describe('PUT /station/:stationId', function() {
-    it('should create a new station', function(done) {
+  describe('PUT /station/:stationId', () => {
+    it('should create a new station', done => {
       request(app)
         .put('/station/12345')
         .set('Content-Type', 'application/json')
@@ -36,10 +36,10 @@ describe('API:', function() {
         .expect('Location', '/station/12345', done)
     });
 
-    it('should update a new station', function(done) {
+    it('should update a new station', done => {
       let agent = request(app);
 
-      let createItem = (cb) => {
+      let createItem = cb => {
         agent.put('/station/123456')
           .set('Content-Type', 'application/json')
           .send({
@@ -50,7 +50,7 @@ describe('API:', function() {
           .expect(200, cb);
       }
 
-      let updateItem = (cb) => {
+      let updateItem = cb => {
         agent.put('/station/123456')
           .set('Content-Type', 'application/json')
           .send({
@@ -72,8 +72,8 @@ describe('API:', function() {
     });
   });
 
-  describe('GET /station/:stationId', function() {
-    beforeEach(function(done) {
+  describe('GET /station/:stationId', () => {
+    beforeEach(done => {
       request(app).put('/station/1234567')
         .set('Content-Type', 'application/json')
         .send({
@@ -84,7 +84,7 @@ describe('API:', function() {
         .expect(200, done);
     });
 
-    it('should return a 200 for an existing station', function(done) {
+    it('should return a 200 for an existing station', done => {
       request(app)
         .get('/station/1234567')
         .set('Content-Type', 'application/json')
@@ -98,7 +98,7 @@ describe('API:', function() {
         .expect('Location', '/station/1234567', done)
     });
 
-    it('should return a 404 for a missing station', function(done) {
+    it('should return a 404 for a missing station', done => {
       request(app)
         .get('/station/-2')
         .set('Content-Type', 'application/json')
@@ -107,7 +107,7 @@ describe('API:', function() {
     });
   });
 
-  describe('GET /station/near/:lat/:long', function() {
+  describe('GET /station/near/:lat/:long', () => {
     beforeEach(function(done) {
       request(app).put('/station/1234567')
         .set('Content-Type', 'application/json')
@@ -119,7 +119,7 @@ describe('API:', function() {
         .expect(200, done);
     });
 
-    it('should find stations near London', function(done) {
+    it('should find stations near London', done => {
       request(app)
         .get('/station/near/51.5286416/-0.1015987?resolution=8')
         .set('Content-Type', 'application/json')
