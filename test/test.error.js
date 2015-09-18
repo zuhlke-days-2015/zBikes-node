@@ -1,6 +1,6 @@
-var Errors = require('../src/errors');
-var should = require('should');
-var Promise = require('bluebird');
+let Errors = require('../src/errors');
+let should = require('should');
+let Promise = require('bluebird');
 
 describe('Errors', () => {
 
