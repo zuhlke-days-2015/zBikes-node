@@ -1,6 +1,9 @@
 module.exports = {
   "port": 9000,
   "base_uri": "/api",
+  "auth": {
+    "url": "http://localhost:9005/customer/"
+  },
   "couchdb": {
     "stations": "http://127.0.0.1:5984/stations",
     "views": {

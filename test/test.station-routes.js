@@ -2,10 +2,10 @@
 
 process.env.NODE_ENV = 'test';
 
-let should = require('should');
-let request = require('supertest');
-let async = require('async');
-let _ = require('lodash');
+let should = require('should'),
+    request = require('supertest'),
+    async = require('async'),
+    _ = require('lodash');
 
 describe('API:', () => {
 
@@ -70,6 +70,32 @@ describe('API:', () => {
 
       async.series([createItem, updateItem], done);
     });
+
+    it('should validate the payload and respond with 400', done => {
+      request(app)
+        .put('/station/12345')
+        .set('Content-Type', 'application/json')
+        .send({
+          location: { lat: 51.5286416, long: -0.1015987 },
+          availableBikes: ["001","002","003","004"]
+        })
+        .expect('Content-Type', /json/)
+        .expect(400, done)
+    });
+
+    it('should validate the payload and not allow empty strings', done => {
+      request(app)
+        .put('/station/12345')
+        .set('Content-Type', 'application/json')
+        .send({
+          name: '',
+          location: { lat: 51.5286416, long: -0.1015987 },
+          availableBikes: ["001","002","003","004"]
+        })
+        .expect('Content-Type', /json/)
+        .expect(400, done)
+    });
+
   });
 
   describe('GET /station/:stationId', () => {
@@ -130,6 +156,20 @@ describe('API:', () => {
           should(_.get(res, 'body.items[0].geohash')).equal('gcpvjsw00e48');
           done();
         });
+    });
+  });
+
+  describe('POST /station/:stationId/bike', () => {
+    it('should return 401 if the user is not authenticated', done => {
+      request(app)
+        .post('/station/123456/bike')
+        .set('Content-Type', 'application/json')
+        .send({
+          username: 'foobar',
+          action: 'hire'
+        })
+        .expect('Content-Type', /json/)
+        .expect(401, done);
     });
   });
 

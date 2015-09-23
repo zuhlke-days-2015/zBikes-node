@@ -16,6 +16,14 @@ class NotFound extends Error {
   }
 }
 
+class Unauthorised extends Error {
+  constructor(message, status) {
+    super();
+    this.status = status || 401;
+    this.message = message || 'Unauthorised';
+  }
+}
+
 class HttpError extends Error {
   constructor(message, status) {
     super();
@@ -27,3 +35,4 @@ class HttpError extends Error {
 exports.InternalServerError = InternalServerError;
 exports.NotFound = NotFound;
 exports.HttpError = HttpError;
+exports.Unauthorised = Unauthorised;
